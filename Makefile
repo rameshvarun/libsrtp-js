@@ -10,14 +10,23 @@ EXPORTED_FUNCTIONS = srtp_init \
 	srtp_update \
 	srtp_update_stream
 
-libsrtp2.js: libsrtp/libsrtp2.a
-	emcc -o libsrtp2.js --bind -s "MODULARIZE=1" -s "EXTRA_EXPORTED_RUNTIME_METHODS=['cwrap']" -s "EXPORTED_FUNCTIONS=[$(shell echo $(EXPORTED_FUNCTIONS) | sed -E "s/([_0-9A-Za-z]+)/'_\1'/g" | sed -E "s/[[:space:]]+/, /g" )]" libsrtp/libsrtp2.a
+libsrtp2.out.js: libsrtp/libsrtp2.a
+	emcc -o libsrtp2.out.js \
+		-s "STRICT=1" \
+		-s "ALLOW_MEMORY_GROWTH=1" \
+		-s "WASM=1" \
+		-s "MODULARIZE=1" \
+		-s "EXTRA_EXPORTED_RUNTIME_METHODS=['cwrap', 'ccall']" \
+		-s "FILESYSTEM=0" \
+		-s "EXPORTED_FUNCTIONS=[$(shell echo $(EXPORTED_FUNCTIONS) | sed -E "s/([_0-9A-Za-z]+)/'_\1'/g" | sed -E "s/[[:space:]]+/, /g" )]" \
+		libsrtp/libsrtp2.a
 
 .PHONY : clean
 
 clean:
-	rm libsrtp2.js libsrtp2.wasm
+	rm -f libsrtp2.out.*
 	cd libsrtp && git clean -xf
+	emcc --clear-cache --clear-ports
 
 libsrtp/Makefile:
 	cd libsrtp && emconfigure ./configure

@@ -1,2 +1,2 @@
-libsrtp2.js
-libsrtp2.wasm
+libsrtp2.out.*
+node_modules/

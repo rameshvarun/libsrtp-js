@@ -1,0 +1,19 @@
+{
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/jest": "^25.1.0",
+    "@types/node": "^13.5.1",
+    "file-loader": "^5.0.2",
+    "jest": "^24.9.0",
+    "ts-jest": "^25.0.0",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.5",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10",
+    "webpack-merge": "^4.2.2"
+  },
+  "scripts": {
+    "test": "jest"
+  }
+}
