@@ -1,14 +1,19 @@
 EXPORTED_FUNCTIONS = srtp_init \
-  srtp_shutdown \
+	srtp_t_sizeof \
+	srtp_policy_t_sizeof \
+	srtp_crypto_policy_t_sizeof \
+	srtp_shutdown \
 	srtp_protect \
 	srtp_protect_mki \
-  srtp_unprotect \
+	srtp_unprotect \
 	srtp_unprotect_mki \
-  srtp_create \
+	srtp_create \
+	srtp_dealloc \
 	srtp_add_stream \
 	srtp_remove_stream \
 	srtp_update \
-	srtp_update_stream
+	srtp_update_stream \
+	srtp_crypto_policy_set_rtp_default
 
 libsrtp2.out.js: libsrtp/libsrtp2.a
 	emcc -o libsrtp2.out.js \
@@ -19,9 +24,11 @@ libsrtp2.out.js: libsrtp/libsrtp2.a
 		-s "EXTRA_EXPORTED_RUNTIME_METHODS=['cwrap', 'ccall']" \
 		-s "FILESYSTEM=0" \
 		-s "EXPORTED_FUNCTIONS=[$(shell echo $(EXPORTED_FUNCTIONS) | sed -E "s/([_0-9A-Za-z]+)/'_\1'/g" | sed -E "s/[[:space:]]+/, /g" )]" \
+		binding.c \
 		libsrtp/libsrtp2.a
 
-.PHONY : clean
+patch:
+	cd libsrtp && git diff > ../patch.diff
 
 clean:
 	rm -f libsrtp2.out.*
@@ -33,3 +40,5 @@ libsrtp/Makefile:
 
 libsrtp/libsrtp2.a: libsrtp/Makefile
 	cd libsrtp && emmake make
+
+.PHONY : clean patch
