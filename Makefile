@@ -2,6 +2,12 @@ EXPORTED_FUNCTIONS = srtp_init \
 	srtp_t_sizeof \
 	srtp_policy_t_sizeof \
 	srtp_crypto_policy_t_sizeof \
+	srtp_crypto_policy_t_get_cipher_type \
+	srtp_crypto_policy_t_get_cipher_key_len \
+	srtp_crypto_policy_t_get_auth_type \
+	srtp_crypto_policy_t_get_auth_key_len \
+	srtp_crypto_policy_t_get_auth_tag_len \
+	srtp_crypto_policy_t_get_sec_serv \
 	srtp_shutdown \
 	srtp_protect \
 	srtp_protect_mki \
@@ -13,9 +19,10 @@ EXPORTED_FUNCTIONS = srtp_init \
 	srtp_remove_stream \
 	srtp_update \
 	srtp_update_stream \
-	srtp_crypto_policy_set_rtp_default
+	srtp_crypto_policy_set_rtp_default \
+	srtp_crypto_policy_set_rtcp_default
 
-libsrtp2.out.js: libsrtp/libsrtp2.a
+libsrtp2.out.js: libsrtp/libsrtp2.a binding.c
 	emcc -o libsrtp2.out.js \
 		-s "STRICT=1" \
 		-s "ALLOW_MEMORY_GROWTH=1" \

@@ -1,5 +1,5 @@
 /** Represents the emscripten module. Only initialized after the init function is called. */
-let EM = null;
+let EM: any = null;
 
 export enum ErrorStatus {
   Ok = 0,
@@ -77,22 +77,106 @@ export enum SecurityServices {
   ConfAndAuth = 3
 }
 
+function convertPolicy(buffer) {
+  return new CryptoPolicy(
+    EM.ccall(
+      "srtp_crypto_policy_t_get_cipher_type",
+      "number",
+      ["number"],
+      [buffer]
+    ),
+    EM.ccall(
+      "srtp_crypto_policy_t_get_cipher_key_len",
+      "number",
+      ["number"],
+      [buffer]
+    ),
+    EM.ccall(
+      "srtp_crypto_policy_t_get_auth_type",
+      "number",
+      ["number"],
+      [buffer]
+    ),
+    EM.ccall(
+      "srtp_crypto_policy_t_get_auth_key_len",
+      "number",
+      ["number"],
+      [buffer]
+    ),
+    EM.ccall(
+      "srtp_crypto_policy_t_get_auth_tag_len",
+      "number",
+      ["number"],
+      [buffer]
+    ),
+    EM.ccall(
+      "srtp_crypto_policy_t_get_sec_serv",
+      "number",
+      ["number"],
+      [buffer]
+    )
+  );
+}
+
 export class CryptoPolicy {
   cipherType: CipherType;
   cipherKeyLen: number;
   authType: AuthType;
   authKeyLen: number;
   authTagLen: number;
-
   secServe: SecurityServices;
+
+  constructor(
+    cipherType: CipherType,
+    cipherKeyLen: number,
+    authType: AuthType,
+    authKeyLen: number,
+    authTagLen: number,
+    secServe: SecurityServices
+  ) {
+    this.cipherType = cipherType;
+    this.cipherKeyLen = cipherKeyLen;
+    this.authType = authType;
+    this.authKeyLen = authKeyLen;
+    this.authTagLen = authTagLen;
+    this.secServe = secServe;
+  }
 
   static getRTPDefault(): CryptoPolicy {
     let buffer = EM._malloc(EM.ccall("srtp_crypto_policy_t_sizeof", "number"));
+    EM.ccall(
+      "srtp_crypto_policy_set_rtp_default",
+      "void",
+      ["number"],
+      [buffer]
+    );
+    let policy = convertPolicy(buffer);
+    EM._free(buffer);
+    return policy;
+  }
+
+  static getRTCPDefault(): CryptoPolicy {
+    let buffer = EM._malloc(EM.ccall("srtp_crypto_policy_t_sizeof", "number"));
+    EM.ccall(
+      "srtp_crypto_policy_set_rtcp_default",
+      "void",
+      ["number"],
+      [buffer]
+    );
+    let policy = convertPolicy(buffer);
+    EM._free(buffer);
+    return policy;
   }
 }
 
 export class Policy {
-  ssrc: SSRC;
+  ssrc: SSRC = {type: SSRCType.Undefined};
+  rtp: CryptoPolicy = CryptoPolicy.getRTPDefault();
+  rtcp: CryptoPolicy = CryptoPolicy.getRTCPDefault();
+  key?: ArrayBuffer;
+
+  windowSize: number = 0;
+  allowRepeatTx: boolean = false;
 }
 
 function formatError(status: ErrorStatus) {
@@ -107,9 +191,14 @@ function checkStatus(status: ErrorStatus) {
   }
 }
 
+function policyStruct(policy: Policy) {
+  let buffer = EM._malloc(EM.ccall("srtp_policy_t_sizeof", "number"));
+  return buffer;
+}
+
 export class Session {
   ctx: number;
-  constructor() {
+  constructor(policy: Policy) {
     let buffer = EM._malloc(EM.ccall("srtp_t_sizeof", "number"));
     checkStatus(
       EM.ccall("srtp_create", "number", ["number", "number"], [buffer, 0])
@@ -122,7 +211,12 @@ export class Session {
     // TODO: Need to add auth length.
     let buf = EM._malloc(packet.byteLength);
     EM.HEAP8.set(packet, buf);
-    let status = EM.ccall("srtp_protect", "number", ["number", "number", "number"], [this.ctx, buf, packet.byteLength]);
+    let status = EM.ccall(
+      "srtp_protect",
+      "number",
+      ["number", "number", "number"],
+      [this.ctx, buf, packet.byteLength]
+    );
     EM.free(buf);
     if (status) {
       throw status;
@@ -131,9 +225,7 @@ export class Session {
   }
 
   destroy() {
-    checkStatus(
-      EM.ccall("srtp_dealloc", "number", ["number"], [this.ctx])
-    );
+    checkStatus(EM.ccall("srtp_dealloc", "number", ["number"], [this.ctx]));
   }
 }
 
