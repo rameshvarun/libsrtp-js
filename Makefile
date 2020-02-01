@@ -39,8 +39,8 @@ docker:
 	docker build -t libsrtp-js .
 	docker run -v $(shell pwd):/libsrtp-js -it libsrtp-js /bin/bash -c "source /emsdk/emsdk_env.sh && cd /libsrtp-js && make"
 
-patch:
-	cd libsrtp && git diff > ../patch.diff
+test:
+	npm run test
 
 clean:
 	rm -f libsrtp2.out.*
@@ -53,4 +53,4 @@ libsrtp/Makefile:
 libsrtp/libsrtp2.a: libsrtp/Makefile
 	cd libsrtp && emmake make
 
-.PHONY : clean patch
+.PHONY : clean docker test
