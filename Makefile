@@ -8,6 +8,7 @@ EXPORTED_FUNCTIONS = srtp_init \
 	srtp_crypto_policy_t_get_auth_key_len \
 	srtp_crypto_policy_t_get_auth_tag_len \
 	srtp_crypto_policy_t_get_sec_serv \
+	srtp_crypto_policy_t_create \
 	srtp_shutdown \
 	srtp_protect \
 	srtp_protect_mki \
@@ -33,6 +34,10 @@ libsrtp2.out.js: libsrtp/libsrtp2.a binding.c
 		-s "EXPORTED_FUNCTIONS=[$(shell echo $(EXPORTED_FUNCTIONS) | sed -E "s/([_0-9A-Za-z]+)/'_\1'/g" | sed -E "s/[[:space:]]+/, /g" )]" \
 		binding.c \
 		libsrtp/libsrtp2.a
+
+docker:
+	docker build -t libsrtp-js .
+	docker run -v $(shell pwd):/libsrtp-js -it libsrtp-js /bin/bash -c "source /emsdk/emsdk_env.sh && cd /libsrtp-js && make"
 
 patch:
 	cd libsrtp && git diff > ../patch.diff
