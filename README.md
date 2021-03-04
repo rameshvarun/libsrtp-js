@@ -1,4 +1,4 @@
-# [WIP] libSRTP-js
+# [Incomplete] libSRTP-js
 
 Goals:
 - Be a fully typed, idiomatic binding.
